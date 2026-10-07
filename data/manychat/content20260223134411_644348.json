@@ -1,0 +1,1 @@
+{"flow":"content20260223134411_644348","name":"Test Gatekeeper NEU","nodes":[{"id":"ef2f427d-dda0-4d68-857d-666861b19db3","cap":"Send Message","t":"telegram","blocks":["9d2488ed-5d2f-4261-8563-727ae57c3671","CCCCCCCC-dda0-4d68-857d-666861b19db3"]}],"blocks":[{"id":"9d2488ed-5d2f-4261-8563-727ae57c3671","t":"text","text":"Hi"}],"buttons":[]}

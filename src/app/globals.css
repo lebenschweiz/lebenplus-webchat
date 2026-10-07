@@ -1,0 +1,205 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design-Tokens. Light ist die Basis, Dark überschreibt nur die Werte —
+   dadurch bleibt jede Farbe an genau einer Stelle definiert.
+   --------------------------------------------------------------------------- */
+:root {
+  --bg: #eef1f6;
+  --bg-accent: #e3e8f2;
+  --surface: #ffffff;
+  --surface-2: #f6f8fb;
+  --border: #dfe4ec;
+  --border-strong: #c9d1de;
+  --text: #101828;
+  --text-muted: #667085;
+  --text-faint: #98a2b3;
+
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --accent-soft: #eaf0ff;
+  --accent-fg: #ffffff;
+
+  --bubble-bot: #ffffff;
+  --bubble-bot-text: #1d2939;
+  --bubble-user: #1d4ed8;
+  --bubble-user-text: #ffffff;
+
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 3px rgb(16 24 40 / 0.04);
+  --shadow-md: 0 4px 12px rgb(16 24 40 / 0.08), 0 2px 4px rgb(16 24 40 / 0.04);
+  --shadow-lg: 0 12px 32px rgb(16 24 40 / 0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #070b14;
+    --bg-accent: #0b1220;
+    --surface: #121a2b;
+    --surface-2: #18233a;
+    --border: #22304a;
+    --border-strong: #2e3f5e;
+    --text: #e8edf7;
+    --text-muted: #94a3b8;
+    --text-faint: #64748b;
+
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --accent-soft: #16233d;
+    --accent-fg: #041020;
+
+    --bubble-bot: #1a2437;
+    --bubble-bot-text: #e6ecf8;
+    --bubble-user: #2563eb;
+    --bubble-user-text: #ffffff;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 14px rgb(0 0 0 / 0.45);
+    --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.6);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-accent: var(--bg-accent);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-bubble-bot: var(--bubble-bot);
+  --color-bubble-bot-text: var(--bubble-bot-text);
+  --color-bubble-user: var(--bubble-user);
+  --color-bubble-user-text: var(--bubble-user-text);
+  --font-sans: var(--font-geist-sans);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+/* Sichtbarer, aber unaufdringlicher Fokus — wichtig für Tastaturbedienung. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Schlanke Scrollbar, damit der Verlauf ruhig wirkt. */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* --------------------------------------------------------------- Animationen */
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-msg {
+  animation: msg-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-pop {
+  animation: pop-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes dot-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+.animate-dot {
+  animation: dot-bounce 1.3s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(34 197 94 / 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgb(34 197 94 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(34 197 94 / 0);
+  }
+}
+.animate-ring {
+  animation: pulse-ring 2.4s ease-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade {
+  animation: fade-in 0.2s ease both;
+}
+
+/* Wer Bewegung reduziert haben will, bekommt sie nicht. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-msg,
+  .animate-pop,
+  .animate-dot,
+  .animate-ring,
+  .animate-fade {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}
