@@ -45,6 +45,34 @@ Betrifft nur `next dev` — der Production-Build kennt diese Einschränkung nich
 Ohne `STRIPE_SECRET_KEY` läuft die App im Simulationsmodus: jede E-Mail auf
 `@test.*` gilt als zahlender Kunde. Vorlage: `.env.local.example`.
 
+## Online stellen
+
+Die App speichert Sessions und Verlauf in einer SQLite-Datei. Sie braucht
+deshalb einen Hoster mit **dauerhaftem Speicher** — auf Vercel & Co. (Serverless)
+ginge der Verlauf bei jedem Neustart verloren. Das `Dockerfile` im Repo läuft
+auf jedem Docker-Hoster; empfohlen ist [Railway](https://railway.com):
+
+1. Bei Railway mit dem GitHub-Konto anmelden, **New Project → Deploy from
+   GitHub repo** → `lebenschweiz/lebenplus-webchat`. Railway erkennt das
+   Dockerfile selbst.
+2. Im Service **Volume hinzufügen**, Mount-Pfad `/data`. Dort liegt
+   `chat.db` (Pfad per `CHAT_DB_PATH` im Image voreingestellt).
+3. Unter **Settings → Networking → Generate Domain** eine öffentliche Adresse
+   erzeugen (Port `3000`). Eigene Domain optional ebenda.
+4. Jeder Push auf `main` deployt automatisch neu.
+
+Umgebungsvariablen (alle optional, unter **Variables** setzen, nie ins Repo):
+
+| Variable | Wann |
+|---|---|
+| `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` | erst wenn Stripe scharfgeschaltet wird — ohne läuft der Simulationsmodus |
+| `APP_URL` | öffentliche Adresse, z. B. `https://lebenplus.up.railway.app` (für Stripe-Rückleitung) |
+
+Ein ManyChat-API-Key wird zur Laufzeit nicht gebraucht: die Flows sind in den
+Code übersetzt.
+
+Lokal testen: `docker build -t lebenplus-webchat . && docker run -p 3000:3000 -v lebenplus-data:/data lebenplus-webchat`
+
 ## Aufbau
 
 | Datei | Zweck |
