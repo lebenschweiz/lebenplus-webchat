@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /**
+   * Erzeugt beim Build unter .next/standalone einen eigenständigen Server
+   * (server.js + nur die benötigten node_modules). Das Dockerfile baut darauf
+   * auf; `npm run dev` und `npm start` sind davon nicht betroffen.
+   */
+  output: "standalone",
+
+  /**
    * Im Dev-Modus blockiert Next den Zugriff auf seine eigenen Ressourcen
    * (u. a. /_next/hmr) von fremden Hosts. Ohne Freigabe lädt die Seite zwar,
    * das Client-JS hydriert aber nicht — man sieht alles und kann nichts klicken.
