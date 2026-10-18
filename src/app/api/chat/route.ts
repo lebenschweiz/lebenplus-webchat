@@ -4,6 +4,7 @@ import { FlowEngine } from "@/lib/flow/engine";
 import { externalContext } from "@/lib/flow/handlers";
 import { flows } from "@/lib/flow/flows";
 import { store } from "@/lib/store";
+import { accountFields, withAccount } from "@/lib/auth/chat";
 import type { OutMessage, Session } from "@/lib/flow/types";
 
 // node:sqlite laeuft nicht im Edge-Runtime.
@@ -44,8 +45,8 @@ function respond(payload: ChatPayload) {
   return response;
 }
 
-function startFresh(sessionId: string) {
-  const { session, messages } = engine.start(sessionId);
+async function startFresh(sessionId: string) {
+  const { session, messages } = engine.start(sessionId, await accountFields());
   store.clearSnapshots(sessionId);
   store.save(session);
   store.appendMessages(sessionId, messages);
@@ -59,7 +60,7 @@ export async function GET(request: Request) {
 
   if (!existing) {
     const id = cookie ?? randomUUID();
-    const { session, messages } = startFresh(id);
+    const { session, messages } = await startFresh(id);
     return respond({ sessionId: id, messages, awaiting: session.awaiting, canGoBack: false, full: true });
   }
 
@@ -84,13 +85,13 @@ export async function POST(request: Request) {
 
   if (body.reset) {
     const id = randomUUID();
-    const { session, messages } = startFresh(id);
+    const { session, messages } = await startFresh(id);
     return respond({ sessionId: id, messages, awaiting: session.awaiting, canGoBack: false, full: true });
   }
 
   const current = store.load(sessionId);
   if (!current) {
-    const { session, messages } = startFresh(sessionId);
+    const { session, messages } = await startFresh(sessionId);
     return respond({ sessionId, messages, awaiting: session.awaiting, canGoBack: false, full: true });
   }
 
@@ -123,7 +124,7 @@ export async function POST(request: Request) {
   try {
     // Zustand vor der Eingabe sichern, damit "Zurueck" ihn wiederherstellen kann.
     store.pushSnapshot(current);
-    const { session, messages } = await engine.handleInput(current, {
+    const { session, messages } = await engine.handleInput(withAccount(current, await accountFields()), {
       text: body.text,
       buttonIndex: body.buttonIndex,
     });

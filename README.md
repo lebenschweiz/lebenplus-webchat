@@ -43,7 +43,8 @@ DEV_ORIGINS=192.168.178.50 npm run dev
 Betrifft nur `next dev` — der Production-Build kennt diese Einschränkung nicht.
 
 Ohne `STRIPE_SECRET_KEY` läuft die App im Simulationsmodus: jede E-Mail auf
-`@test.*` gilt als zahlender Kunde. Vorlage: `.env.local.example`.
+`@test.*` gilt als zahlender Kunde. Ohne `RESEND_API_KEY` steht der
+Login-Link im Terminal statt in einer Mail. Vorlage: `.env.local.example`.
 
 ## Online stellen
 
@@ -66,7 +67,34 @@ Umgebungsvariablen (alle optional, unter **Variables** setzen, nie ins Repo):
 | Variable | Wann |
 |---|---|
 | `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` | erst wenn Stripe scharfgeschaltet wird — ohne läuft der Simulationsmodus |
-| `APP_URL` | öffentliche Adresse, z. B. `https://lebenplus.up.railway.app` (für Stripe-Rückleitung) |
+| `APP_URL` | öffentliche Adresse, z. B. `https://lebenplus.up.railway.app`. Auf Railway optional (dann gilt die erzeugte Domain), bei eigener Domain setzen |
+| `RESEND_API_KEY`, `MAIL_FROM` | für den Versand der Login-Mails über [Resend](https://resend.com); Absender-Domain dort bestätigen |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | für „Mit Google anmelden“, ohne fehlt der Button |
+| `PREMIUM_EMAILS` | kommagetrennte Adressen, die ohne Abo freigeschaltet sind (Team, Sonderfälle) |
+
+## Login und Premium
+
+Besucher können den Chat ohne Konto nutzen. Für die Premiumzweige der Flows
+(alle Stellen, an denen ManyChat `ActiveSubscription` prüft) muss man
+angemeldet sein **und** ein aktives Abo haben.
+
+- **Anmelden** unter `/login`: per Login-Link an die E-Mail-Adresse (kein
+  Passwort) oder mit Google. Beide Wege führen bei gleicher Adresse ins
+  selbe Konto.
+- **Premium** heißt: zur Konto-Adresse gibt es bei Stripe ein Abo im Status
+  `active`, `trialing` oder `past_due`. Damit zählen auch Abos aus dem
+  Telegram-Zahlungsbot, solange der Kunde sich mit derselben Adresse anmeldet.
+  Der Status wird 10 Minuten zwischengespeichert; „Zugriff prüfen“ im Chat
+  und die Rückkehr aus dem Checkout fragen sofort neu.
+- **Kontoseite** `/konto`: Status, „Premium freischalten“ (Stripe Checkout),
+  „Abo verwalten“ (Stripe-Kundenportal, dort im Dashboard aktivieren), Abmelden.
+- Die Paywall-Nachrichten im Chat verweisen statt auf den Telegram-Bot auf
+  `/konto`; `GW_Verify_Subscription` prüft das Konto statt der `TG_ID`
+  (beides in `flows.ts`).
+
+Google einrichten: in der [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+einen OAuth-Client vom Typ „Webanwendung“ anlegen, als Weiterleitungs-URI
+`<APP_URL>/api/auth/google/callback` eintragen.
 
 Ein ManyChat-API-Key wird zur Laufzeit nicht gebraucht: die Flows sind in den
 Code übersetzt.
@@ -81,8 +109,12 @@ Lokal testen: `docker build -t lebenplus-webchat . && docker run -p 3000:3000 -v
 | `src/lib/flow/engine.ts` | Führt Flows aus, verwaltet Tags, Felder und Position |
 | `src/lib/flow/flows.generated.ts` | **Automatisch erzeugt** — nicht von Hand ändern |
 | `src/lib/flow/flows.ts` | Einstiegspunkt, Ort für bewusste Abweichungen |
-| `src/lib/flow/handlers.ts` | Externe Aktionen (Stripe), aktuell simuliert |
-| `src/lib/store.ts` | Sessions und Verlauf in SQLite (`node:sqlite`, keine Dependency) |
+| `src/lib/flow/handlers.ts` | Externe Aktionen (Abo-Prüfung) |
+| `src/lib/db.ts` | Gemeinsame SQLite-Verbindung (`node:sqlite`, keine Dependency) |
+| `src/lib/store.ts` | Sessions und Verlauf |
+| `src/lib/auth/` | Konten, Login-Link, Google-Login, Anmelde-Cookie |
+| `src/lib/billing.ts` | Premium-Status und Checkout über die Stripe-REST-API |
+| `src/app/login`, `src/app/konto` | Anmelde- und Kontoseite |
 | `src/app/api/chat/route.ts` | HTTP-Schnittstelle, Session per Cookie |
 | `src/app/api/import/route.ts` | Nimmt Flow-Dumps entgegen (nur Dev) |
 | `src/components/Chat.tsx` | Chat-Oberfläche: Verlauf, Quick Replies, Composer |
@@ -158,15 +190,8 @@ aus ManyChat ergänzt werden. Beide sind im generierten Code als
 - **6 Action-Nodes** (Tags setzen, Felder schreiben). Sichtbare Folge: das
   AGB-Gate vergibt den Tag `AGB_ACCEPTED` noch nicht.
 
-Dazu kommt eine inhaltliche Entscheidung:
-
-- **`GW_Verify_Subscription` prüft `TG_ID`** — im Web-Chat nie gesetzt, der
-  Flow landet deshalb immer im Zweig „Ich kann dich noch nicht zuordnen".
-  Hier muss die E-Mail an die Stelle der Telegram-ID treten (Anpassung gehört
-  in `flows.ts`, nicht in die generierte Datei).
-
 Außerdem:
 
-- **Stripe scharfschalten**: `npm i stripe`, dann die beiden mit
-  `TODO echtes Stripe` markierten Stellen in `handlers.ts` einkommentieren
+- **Stripe scharfschalten**: `STRIPE_SECRET_KEY` und `STRIPE_PRICE_ID` setzen,
+  mehr braucht es nicht
 - Optional: Admin-Dashboard auf Basis von `store.list()`

@@ -70,10 +70,11 @@ export class FlowEngine {
     };
   }
 
-  /** Startet eine frische Session am Welcome-Flow. */
-  start(sessionId: string): StepResult {
+  /** Startet eine frische Session am Welcome-Flow, optional mit vorbelegten Feldern. */
+  start(sessionId: string, fields: Session["fields"] = {}): StepResult {
     const welcome = this.allFlows.find((f) => f.trigger?.isWelcome) ?? this.allFlows[0];
-    return this.runFrom({ flow: welcome.id }, this.newSession(sessionId));
+    const session = this.newSession(sessionId);
+    return this.runFrom({ flow: welcome.id }, { ...session, fields: { ...session.fields, ...fields } });
   }
 
   /**
