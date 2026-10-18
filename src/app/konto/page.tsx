@@ -48,6 +48,9 @@ export default async function AccountPage({ searchParams }: PageProps<"/konto">)
           <Link href="/" className={primaryButton}>
             Zum Chat
           </Link>
+          <Link href="/gruppen" className={`${secondaryButton} mt-3`}>
+            Zu den Chatgruppen
+          </Link>
           {stripeEnabled() && user.stripeCustomerId && (
             <form action="/api/billing/portal" method="post" className="mt-3">
               <button type="submit" className={secondaryButton}>
@@ -60,7 +63,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/konto">)
         <>
           <div className="mb-6 rounded-xl bg-surface-2 px-4 py-3 text-sm text-muted">
             <strong className="block text-[15px] text-ink">Noch kein aktives Abo</strong>
-            Mit einem Abo schaltest du alle Mitgliederinhalte im Chat frei, zum Beispiel den Bewilligungsguide, die Netzwerk-Events und die persönliche Beratung.
+            Mit einem Abo schaltest du alle Mitgliederinhalte im Chat frei, zum Beispiel den Bewilligungsguide, die Netzwerk-Events, die persönliche Beratung und die Chatgruppen der Community.
           </div>
           <form action="/api/billing/checkout" method="post">
             <button type="submit" className={primaryButton}>
