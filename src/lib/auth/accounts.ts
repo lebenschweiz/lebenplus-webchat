@@ -135,6 +135,16 @@ export function savePremium(userId: string, premium: boolean, stripeCustomerId?:
   ).run(premium ? 1 : 0, new Date().toISOString(), stripeCustomerId ?? null, userId);
 }
 
+export const MAX_NAME_LENGTH = 40;
+
+/** Anzeigename in den Gruppenchats. Liefert den bereinigten Namen oder null, wenn er ungueltig ist. */
+export function setUserName(userId: string, name: string): string | null {
+  const cleaned = name.replace(/\s+/g, " ").trim();
+  if (cleaned.length < 2 || cleaned.length > MAX_NAME_LENGTH) return null;
+  db.prepare("UPDATE users SET name = ? WHERE id = ?").run(cleaned, userId);
+  return cleaned;
+}
+
 // --- Login per E-Mail-Link --------------------------------------------------
 
 /** Erzeugt einen einmaligen Login-Link-Token fuer diese Adresse. */

@@ -71,6 +71,7 @@ Umgebungsvariablen (alle optional, unter **Variables** setzen, nie ins Repo):
 | `RESEND_API_KEY`, `MAIL_FROM` | für den Versand der Login-Mails über [Resend](https://resend.com); Absender-Domain dort bestätigen |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | für „Mit Google anmelden“, ohne fehlt der Button |
 | `PREMIUM_EMAILS` | kommagetrennte Adressen, die ohne Abo freigeschaltet sind (Team, Sonderfälle) |
+| `ADMIN_EMAILS` | kommagetrennte Adressen, die in den Chatgruppen fremde Nachrichten löschen dürfen |
 
 ## Login und Premium
 
@@ -195,3 +196,19 @@ Außerdem:
 - **Stripe scharfschalten**: `STRIPE_SECRET_KEY` und `STRIPE_PRICE_ID` setzen,
   mehr braucht es nicht
 - Optional: Admin-Dashboard auf Basis von `store.list()`
+
+## Chatgruppen
+
+Die fünf Telegram-Gruppen des Originals (Jobs, Wohnen, Selbstständige,
+Eltern, LPG Core) laufen als eigene Gruppenchats unter `/gruppen`. Die
+Bot-Buttons, die bisher Telegram-Einladungslinks öffneten, führen jetzt dorthin.
+
+- Zugang wie im Original: **Jobs** für alle Angemeldeten, die anderen vier nur
+  mit aktivem Abo. Festgelegt in `src/lib/groups.ts`.
+- Wer sich per E-Mail-Link anmeldet, legt beim ersten Besuch einen
+  Anzeigenamen fest; die E-Mail-Adresse sieht in den Gruppen niemand.
+- Neue Nachrichten kommen per Server-Sent Events in Echtzeit. Der Event-Bus
+  lebt im Serverprozess — passt zu einer Instanz mit SQLite-Volume. Wer auf
+  mehrere Instanzen skaliert, muss ihn ersetzen (z. B. Postgres LISTEN/NOTIFY).
+- Eigene Nachrichten lassen sich löschen, Adressen in `ADMIN_EMAILS` dürfen
+  alle löschen.

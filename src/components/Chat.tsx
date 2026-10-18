@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { OutMessage } from "@/lib/flow/types";
 import RichText from "./RichText";
-import { ArrowDown, ArrowLeft, Close, ExternalLink, Refresh, Send, User } from "./icons";
+import { ArrowDown, ArrowLeft, Close, ExternalLink, Refresh, Send, User, Users } from "./icons";
 
 type Awaiting = null | { kind: "buttons" | "text" };
 type Choices = Extract<OutMessage, { kind: "choices" }>;
@@ -280,6 +281,14 @@ function Header({
         <IconButton label="Gespräch neu starten" onClick={onReset} disabled={busy}>
           <Refresh />
         </IconButton>
+        <Link
+          href="/gruppen"
+          title="Chatgruppen"
+          aria-label="Chatgruppen"
+          className="grid h-9 w-9 place-items-center rounded-lg text-muted transition hover:bg-surface-2 hover:text-ink"
+        >
+          <Users />
+        </Link>
         <AccountLink account={account} />
       </div>
     </header>
