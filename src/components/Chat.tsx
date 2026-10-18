@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { OutMessage } from "@/lib/flow/types";
 import RichText from "./RichText";
-import { ArrowDown, ArrowLeft, Close, ExternalLink, Refresh, Send } from "./icons";
+import { ArrowDown, ArrowLeft, Close, ExternalLink, Refresh, Send, User } from "./icons";
 
 type Awaiting = null | { kind: "buttons" | "text" };
 type Choices = Extract<OutMessage, { kind: "choices" }>;
@@ -32,7 +32,13 @@ function thinkingTime(message: OutMessage): number {
   return Math.min(300 + length * 8, 1100);
 }
 
-export default function Chat() {
+/** Was der Header über das Konto wissen muss; null = nicht angemeldet. */
+export interface ChatAccount {
+  email: string;
+  premium: boolean;
+}
+
+export default function Chat({ account }: { account: ChatAccount | null }) {
   const [messages, setMessages] = useState<OutMessage[]>([]);
   const [awaiting, setAwaiting] = useState<Awaiting>(null);
   const [canGoBack, setCanGoBack] = useState(false);
@@ -172,6 +178,7 @@ export default function Chat() {
         active={busy || typing}
         canGoBack={canGoBack}
         busy={busy}
+        account={account}
         onBack={() => {
           setAtBottom(true);
           void send({ back: true });
@@ -237,6 +244,7 @@ function Header({
   active,
   canGoBack,
   busy,
+  account,
   onBack,
   onReset,
 }: {
@@ -244,6 +252,7 @@ function Header({
   active: boolean;
   canGoBack: boolean;
   busy: boolean;
+  account: ChatAccount | null;
   onBack: () => void;
   onReset: () => void;
 }) {
@@ -271,8 +280,37 @@ function Header({
         <IconButton label="Gespräch neu starten" onClick={onReset} disabled={busy}>
           <Refresh />
         </IconButton>
+        <AccountLink account={account} />
       </div>
     </header>
+  );
+}
+
+/** Anmelden bzw. Konto — normale Navigation, der Chatverlauf bleibt erhalten. */
+function AccountLink({ account }: { account: ChatAccount | null }) {
+  if (!account) {
+    return (
+      <a
+        href="/login"
+        className="ml-1 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-accent-fg transition hover:bg-accent-hover"
+      >
+        Anmelden
+      </a>
+    );
+  }
+  const label = account.premium ? `Konto (Premium): ${account.email}` : `Konto: ${account.email}`;
+  return (
+    <a
+      href="/konto"
+      title={label}
+      aria-label={label}
+      className="relative grid h-9 w-9 place-items-center rounded-lg text-muted transition hover:bg-surface-2 hover:text-ink"
+    >
+      <User />
+      {account.premium && (
+        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-surface" />
+      )}
+    </a>
   );
 }
 
@@ -454,13 +492,15 @@ function Composer({
               const delay = { animationDelay: `${Math.min(index * 35, 350)}ms` };
 
               // Externe Ziele sind echte Links: Popup-Blocker, Mittelklick und
-              // "Link kopieren" funktionieren damit wie erwartet.
+              // "Link kopieren" funktionieren damit wie erwartet. Eigene Seiten
+              // (Login, Konto) oeffnen im selben Tab, der Verlauf bleibt ja erhalten.
+              const internal = button.url?.startsWith("/");
               return button.url ? (
                 <a
                   key={index}
                   href={normaliseUrl(button.url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={internal ? undefined : "_blank"}
+                  rel={internal ? undefined : "noopener noreferrer"}
                   onClick={() => onChoose(index, button)}
                   style={delay}
                   className={[
@@ -469,7 +509,7 @@ function Composer({
                   ].join(" ")}
                 >
                   {button.label}
-                  <ExternalLink />
+                  {!internal && <ExternalLink />}
                 </a>
               ) : (
                 <button
@@ -549,7 +589,7 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
 }
 
 function normaliseUrl(url: string): string {
-  if (/^https?:\/\//i.test(url)) return url;
+  if (/^https?:\/\//i.test(url) || url.startsWith("/")) return url;
   if (/^[\w.+-]+@/.test(url)) return `mailto:${url}`;
   return `https://${url}`;
 }

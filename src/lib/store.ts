@@ -1,6 +1,5 @@
-import { DatabaseSync } from "node:sqlite";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
+import type { DatabaseSync } from "node:sqlite";
+import { db } from "./db";
 import type { OutMessage, Session } from "./flow/types";
 
 /**
@@ -27,13 +26,6 @@ export interface SessionStore {
   /** Entfernt alle Nachrichten, die nach diesem Stand entstanden sind. */
   truncateMessagesAfter(sessionId: string, messageId: number): void;
   clearSnapshots(sessionId: string): void;
-}
-
-const DB_PATH = process.env.CHAT_DB_PATH ?? path.join(process.cwd(), "data", "chat.db");
-
-function open(): DatabaseSync {
-  mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  return new DatabaseSync(DB_PATH);
 }
 
 /**
@@ -65,11 +57,7 @@ function ensureSchema(db: DatabaseSync): void {
   `);
 }
 
-// Next.js laedt Module im Dev-Modus neu; die Verbindung ueberlebt das am globalThis.
-const globalForDb = globalThis as unknown as { __chatDb?: DatabaseSync };
-const db = globalForDb.__chatDb ?? open();
 ensureSchema(db);
-if (process.env.NODE_ENV !== "production") globalForDb.__chatDb = db;
 
 /** Groesste Nachrichten-ID der Session — Marke fuer das Zuruecksetzen. */
 function lastMessageId(sessionId: string): number {
